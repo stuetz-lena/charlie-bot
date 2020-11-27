@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="assets/ggpopover.css" type="text/css">
+        <script src="assets/ggpopover.js"></script>
+        <style>
+            /*sizing*/
+            html, body { height: 100% }
+            body { 
+                margin: 0; 
+                height:100vh;
+                font-family: 'BMW Group', 'Arial', sans-serif;
+                }
+            #webchat {
+                width:100%;
+                height:calc(100% - 292px);
+                margin-top:5px;
+            }
+            #webchat.active {
+                height:calc(100% - 114px);
+                margin-top:40px;
+            }
+
+            /*overrides*/
+            .webchat__send-box-text-box__input {
+                background-color:#fff !important;
+                padding:6px !important;
+                height:75% !important;
+            }
+            .webchat__suggested-action__button-text {
+                font-size:18px !important;
+            }
+            .webchat__icon-button[title="Datei hochladen"] {
+                background-color:transparent !important;
+            }
+            .webchat__icon-button[title="Datei hochladen"] svg {
+                display:none !important;
+            }
+            .webchat__icon-button[title="Datei hochladen"]:after {
+                content:url(options_active.png);
+                display:block;
+            }
+            .webchat__icon-button {
+                background-color:#9d9393 !important;
+            }
+            .webchat__send-icon {
+                width:35px;
+                height:35px;
+            }
+            .webchat__bubble__content .ac-textRun {
+                color:#fff !important;
+            }
+
+            /*cb-headers*/
+            .left {
+                float: left;
+            }
+            .right {
+                float: right;
+            }
+            .col-3 {
+                width: 30%;
+            }
+            img {
+                height: auto;
+                max-width: 100%;
+            }
+            .cb-header img {
+                max-height: 54px;
+            }
+            .cb-header {
+                background-color: #1a1a1a;
+                padding: 10px 20px;
+                height: 54px;
+            }
+            .icon img {
+                height: 25px;
+                width: auto;
+            }
+            .icon.close{
+                margin-left: 10px;
+            }
+            .icon {
+                padding: 12px;
+            }
+            .cb-introduction img {
+                max-width: 140px;
+            }
+            .cb-introduction {
+                padding: 0 0 25px;
+                box-shadow: 0px 2px 5px #ddd;
+            }
+            .col-5 {
+                width: 50%;
+                margin: 0 auto;
+            }
+            .clear:after {
+                visibility: hidden;
+                display: block;
+                font-size: 0;
+                content: " ";
+                clear: both;
+                height: 0;
+            }
+            .intro {
+                margin-left: 5%;
+                width: 65%;
+            }
+            h1 {
+                font-size: 2.25em;
+                color: #cfcf8c;
+                text-transform: uppercase;
+                margin: 0.75em 0 0.25em;
+                letter-spacing: 1px;
+            }
+            .intro p {
+                margin: 0;
+            }
+            .cb-introduction .pic {
+                text-align:right;
+            }
+            #expandation img {
+                width:25px;
+                height:15px;
+                padding:10px 32px;
+            }
+            #expandation.active img {
+                transform:rotate(180deg);
+            }
+            #cb-introduction {
+                -webkit-transition: max-height 0.1s; 
+                -moz-transition: max-height 0.1s; 
+                -ms-transition: max-height 0.1s; 
+                -o-transition: max-height 0.1s; 
+                transition: max-height 0.1s;
+                max-height:100%;
+                overflow:hidden;
+            }
+            #cb-introduction.active {
+                max-height:35px;
+                position:fixed;
+                width:100vw;
+                padding:0;
+            }
+
+            /*overrides popovers*/
+            .ggpopover .popover-title {
+                background-color :#fff !important;
+                border-bottom: none !important;
+            }
+        </style>
+    </head>
+   <body>
+       <div class="cb-header">
+            <div class="left">
+                <img src="assets/charlie-icon.png"/>
+            </div>
+            <div class="right col-3">
+                <div class="icon close right">
+                    <a href="#" onclick="alert('Fenster wird geschlossen!');">
+                        <img src="assets/close.png"/>
+                    </a>
+                </div>
+                <div class="icon help right">
+                    <a href="#_" data-toggle="popover" data-placement="auto" title="Hilfe"
+                    data-content='Tippe "Hilfe", um dir diese anzeigen zu lassen.'>
+                        <img src="assets/help.png"/>
+                    </a>
+                </div>
+                <div class="icon options right">
+                    <a href="#_" data-toggle="popover" data-placement="auto" title="Sprache, Feedback, Dark-Mode"
+                    data-content='Tippe "Feedback", um uns eine Rückmeldung zu geben. Weitere Funktionalitäten folgen.'>
+                        <img src="assets/options.png"/>
+                    </a>
+                </div>
+            </div>
+       </div>
+       <div id="cb-introduction" class="cb-introduction">
+            <div id="expandation" class="clear" onclick="triggerExpand()">
+                <div class="right">
+                    <img src="assets/toggle.png"/>
+                </div>
+            </div>
+           <div class="col-5 clear">
+               <div class="col-3 left pic">
+                   <img src="assets/charlie-icon-big.png"/>
+               </div>
+               <div class="intro left">
+                   <h1>Hi, ich bin Charlie</h1>
+                   <p>Du kannst mittels der vorgegebenen Optionen mit mir kommunizieren oder eigene Fragen stellen, hierfür sind Stichpunkte ausreichend.</p>
+               </div>
+           </div>
+       </div>
+      <div id="webchat" role="main"></div>
+      <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+      <script>
+          // code basis from: https://docs.microsoft.com/de-de/azure/bot-service/bot-builder-webchat-customization?view=azure-bot-service-4.0
+         // "styleSet" is a set of CSS rules which are generated from "styleOptions"
+         // for available options see: https://github.com/Microsoft/BotFramework-WebChat/blob/master/packages/component/src/Styles/defaultStyleOptions.js
+         const styleSet = window.WebChat.createStyleSet({
+            bubbleBackground: '#3d3b3e',
+            bubbleFromUserBackground: '#9d9393',
+            bubbleFromUserTextColor: '#fff',
+            bubbleTextColor: '#fff',
+            bubbleBorderWidth: '0',
+            bubbleFromUserBorderWidth: '0',
+            bubbleBorderRadius: '0',
+            bubbleFromUserBorderRadius: '0',
+            hideUploadButton: true,
+            sendBoxBackground: '#ededed',
+            sendBoxButtonColor: '#fff',
+            sendBoxBorderTop: 'none',
+            suggestedActionBackground: '#9c9c1b',
+            suggestedActionBorderWidth: '0',
+            suggestedActionTextColor: '#fff',
+            bubbleFromUserNubOffset: '20',
+            sendBoxHeight: 64, 
+            sendBoxPlaceholderColor: '#9d9393',
+            rootHeight: '100%',
+            rootWeight: '100%',
+            sendBoxButtonColorOnHover: '#ededed',
+            paddingRegular: 12,
+            hideUploadButton: true
+         });
+
+         // After generated, you can modify the CSS rules
+         styleSet.textContent = {
+            ...styleSet.textContent,
+            fontFamily: "'BMW Group', 'Arial', sans-serif", 
+            fontSize: "18px"
+         };
+
+         window.WebChat.renderWebChat(
+            {
+               directLine: window.WebChat.createDirectLine({
+                  secret: '5nr6GajGd2A.NQXh7fOaHWdnw2KYNtY_AegS1yLKLqTtIRqMcQ4kFnI'//you can find it in your web chat channel in azure
+               }),
+
+               // Passing 'styleSet' when rendering Web Chat
+               styleSet
+            },
+            document.getElementById('webchat')
+         );
+      </script>
+      <script>
+        //Enable Popovers
+        $('[data-toggle="popover"]').ggpopover({ bordercolor : '#ffffff', 'title-backcolor' : '#ffffff', 'title-bordercolor' : '#ffffff', trigger : 'hover click' });
+      
+        //Toogle Expandation from Introduction
+        function triggerExpand(){
+            let expand = document.getElementById("expandation").classList.toggle("active");
+            document.getElementById("cb-introduction").classList.toggle("active");
+            document.getElementById("webchat").classList.toggle("active");
+        }
+
+          jQuery(document).ready(function(){
+            jQuery("input[type='file']").on("click",function(){
+            alert('Gib "Optionen" ein um dir anzeigen zu lassen, wobei Charlie dich unterstützen kann')
+            /*jQuery(".webchat__send-box-text-box__input").shadowRoot.appendChild("Optionen");
+            jquery(".webchat__icon-button[title='Senden']").click();*/
+            });
+        })
+        </script>
+   </body>
+</html>
